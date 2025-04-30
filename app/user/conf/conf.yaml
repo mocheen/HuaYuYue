@@ -1,0 +1,22 @@
+kitex:
+  service: "user"
+  address: ":8888"
+  log_level: info
+  otlp_address: "localhost:4317"
+
+registry:
+  registry_address:
+    - 127.0.0.1:2379
+  username: ""
+  password: ""
+mysql:
+  host: "192.168.114.129"
+  port: "3306"
+  username: "root"
+  password: "123456"
+
+redis:
+  address: "127.0.0.1:6379"
+  username: ""
+  password: ""
+  db: 0
