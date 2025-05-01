@@ -2,6 +2,10 @@
 package user
 
 import (
+	"app/user/discovery"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 	"net"
 	"os"
 
@@ -14,7 +18,6 @@ import (
 	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
-	kitexlogrus "github.com/kitex-contrib/obs-opentelemetry/logging/logrus"
 )
 
 func main() {
@@ -26,7 +29,29 @@ func main() {
 
 	svr := userservice.NewServer(new(UserServiceImpl), opts...)
 
-	err := svr.Run()
+	server := grpc.NewServer()
+	//etcd
+	etcdAddress := []string{viper.GetString("etcd.address")}
+	etcdRegister := discovery.NewRegister(etcdAddress, logrus.New())
+	grpcAddress := viper.GetString("server.grpcAddress")
+	userNode := discovery.Server{
+		Name: viper.GetString("server.domain"),
+		Addr: grpcAddress,
+	}
+
+	// 监听
+	lis, err := net.Listen("tcp", grpcAddress)
+	if err != nil {
+		panic(err)
+	}
+	if _, err := etcdRegister.Register(userNode, 10); err != nil {
+		panic(err)
+	}
+	if err = svr.Serve(lis); err != nil() {
+
+	}
+
+	err = svr.Run()
 	if err != nil {
 		klog.Error(err.Error())
 	}
