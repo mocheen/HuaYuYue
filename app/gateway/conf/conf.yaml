@@ -1,0 +1,13 @@
+server:
+  domain: gateway
+  port: 4000
+  version: 1.0
+  jwtSecret: "FanOne"
+
+
+
+
+
+
+
+

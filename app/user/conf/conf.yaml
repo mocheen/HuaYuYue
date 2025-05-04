@@ -1,19 +1,20 @@
-kitex:
-  service: "user"
-  address: ":8888"
-  log_level: info
-  otlp_address: "localhost:4317"
+server:
+  domain: user
+  version: 1.0
+  jwtSecret: "FanOne"
+  grpcAddress: "127.0.0.1:10002"
 
-registry:
-  registry_address:
-    - 127.0.0.1:2379
-  username: ""
-  password: ""
 mysql:
+  driverName: mysql
   host: "192.168.114.129"
   port: "3306"
+  database: "user"
   username: "root"
   password: "123456"
+  charset: utf8mb4
+
+etcd:
+  address: "127.0.0.1:2379"
 
 redis:
   address: "127.0.0.1:6379"
@@ -21,12 +22,10 @@ redis:
   password: ""
   db: 0
 
-etcd:
-  address: "127.0.0.1:2379"
 
-server:
-  domain: user
-  version: 1.0
-  jwtSecret: "FanOne"
-  grpcAddress: "127.0.0.0:10001"
+
+
+
+
+
 
