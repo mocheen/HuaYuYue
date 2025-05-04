@@ -2,15 +2,15 @@
 package main
 
 import (
-	"app/user/conf"
-	"app/user/discovery"
-	"app/user/internal/handler"
-	"app/user/internal/repository"
-	service "app/user/internal/service/pb"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"net"
+	"user/conf"
+	"user/discovery"
+	"user/internal/handler"
+	"user/internal/repository"
+	service "user/internal/service/pb"
 )
 
 func main() {
@@ -22,8 +22,9 @@ func main() {
 	etcdRegister := discovery.NewRegister(etcdAddress, logrus.New())
 	grpcAddress := viper.GetString("server.grpcAddress")
 	userNode := discovery.Server{
-		Name: viper.GetString("server.domain"),
-		Addr: grpcAddress,
+		Name:    viper.GetString("server.domain"),
+		Addr:    grpcAddress,
+		Version: viper.GetString("server.version"),
 	}
 
 	srv := grpc.NewServer()

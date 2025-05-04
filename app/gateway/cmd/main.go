@@ -3,15 +3,45 @@ package main
 import (
 	"gateway/conf"
 	"gateway/discovery"
-	service "gateway/internal/service/pb"
-
+	"gateway/idl/pb/user"
 	"gateway/routes"
-
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/resolver"
 )
+
+//func main() {
+//	conf.InitConfig()
+//	handler.Init()
+//
+//	go startListen() // 转载路由
+//	{
+//		osSignals := make(chan os.Signal, 1)
+//		signal.Notify(osSignals, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL)
+//		s := <-osSignals
+//		fmt.Println("exit! ", s)
+//	}
+//}
+//
+//func startListen() {
+//
+//	r := routes.NewRouter()
+//	server := &http.Server{
+//		Addr:           conf.Conf.Server.Port,
+//		Handler:        r,
+//		ReadTimeout:    10 * time.Second,
+//		WriteTimeout:   10 * time.Second,
+//		MaxHeaderBytes: 1 << 20,
+//	}
+//	if err := server.ListenAndServe(); err != nil {
+//		fmt.Println("gateway启动失败, err: ", err)
+//	}
+//	go func() {
+//		// 优雅关闭
+//		shutdown.GracefullyShutdown(server)
+//	}()
+//}
 
 func main() {
 	conf.InitConfig()
@@ -34,7 +64,7 @@ func main() {
 	defer userServiceConn.Close()
 
 	// 关键修改：创建 UserServiceClient 实例
-	userServiceClient := service.NewUserServiceClient(userServiceConn)
+	userServiceClient := user.NewUserServiceClient(userServiceConn)
 
 	// 传递客户端实例而非连接对象
 	ginRouter := routes.NewRouter(userServiceClient)

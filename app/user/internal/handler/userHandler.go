@@ -1,13 +1,13 @@
 package handler
 
 import (
-	"app/user/internal/repository"
-	"app/user/internal/repository/query"
-	service "app/user/internal/service/pb"
 	"context"
 	"errors"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"user/internal/repository"
+	"user/internal/repository/query"
+	service "user/internal/service/pb"
 )
 
 type UserService struct {

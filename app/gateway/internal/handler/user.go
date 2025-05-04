@@ -2,17 +2,18 @@ package handler
 
 import (
 	"context"
-	service "gateway/internal/service/pb"
+	"gateway/idl/pb/user"
+
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 func UserRegister(ctx *gin.Context) {
-	var req service.RegisterReq
+	var req user.RegisterReq
 	PanicIfUserError(ctx.Bind(&req))
 
-	userService := ctx.Keys["user"].(service.UserServiceClient)
+	userService := ctx.Keys["user"].(user.UserServiceClient)
 	resp, err := userService.Register(context.Background(), &req)
 	PanicIfUserError(err)
 
@@ -20,10 +21,10 @@ func UserRegister(ctx *gin.Context) {
 }
 
 func UserLogin(ctx *gin.Context) {
-	var req service.LoginReq
+	var req user.LoginReq
 	PanicIfUserError(ctx.Bind(&req))
 
-	userService := ctx.Keys["user"].(service.UserServiceClient)
+	userService := ctx.Keys["user"].(user.UserServiceClient)
 	resp, err := userService.Login(context.Background(), &req)
 	PanicIfUserError(err)
 

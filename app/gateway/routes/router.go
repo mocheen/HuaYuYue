@@ -2,14 +2,14 @@ package routes
 
 import (
 	"gateway/internal/handler"
-	middlerware "gateway/middleware"
+	"gateway/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
 func NewRouter(service ...interface{}) *gin.Engine {
 	ginRouter := gin.Default()
-	ginRouter.Use(middlerware.Cors(), middlerware.InitMiddleware(service))
+	ginRouter.Use(middleware.Cors(), middleware.ErrorMiddleware())
 	v1 := ginRouter.Group("/api/v1")
 	{
 		v1.GET("/ping", func(c *gin.Context) {
