@@ -2,12 +2,13 @@ package handler
 
 import (
 	"context"
-	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"sync"
 	"user/internal/repository"
 	"user/internal/repository/query"
+	"user/jwt"
+	"user/util"
 
 	service "user/internal/service/pb"
 )
@@ -28,10 +29,7 @@ func GetUserSrv() *UserSrv {
 
 func (s *UserSrv) Register(ctx context.Context, req *service.RegisterReq) (*service.RegisterResp, error) {
 	// 密码加密
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "密码加密失败: %v", err)
-	}
+	hashedPassword := util.HashWithSalt(req.Password, req.Username)
 
 	u := query.User
 	tx := query.Q.Begin()
@@ -47,10 +45,21 @@ func (s *UserSrv) Register(ctx context.Context, req *service.RegisterReq) (*serv
 		return nil, status.Errorf(codes.AlreadyExists, "该邮箱已注册")
 	}
 
+	// 检查用户名是否已经存在
+	count, err = tx.User.Where(u.UserName.Eq(req.Username)).Count()
+	if err != nil {
+		tx.Rollback()
+		return nil, status.Errorf(codes.Internal, "数据库查询失败: %v", err)
+	}
+	if count > 0 {
+		tx.Rollback()
+		return nil, status.Errorf(codes.AlreadyExists, "该用户名已存在")
+	}
+
 	// 创建用户对象
 	user := &repository.User{
 		Email:    req.Email,
-		Password: string(hashedPassword),
+		Password: hashedPassword,
 		UserName: req.Username,
 	}
 
@@ -76,20 +85,34 @@ func (s *UserSrv) Register(ctx context.Context, req *service.RegisterReq) (*serv
 
 func (s *UserSrv) Login(ctx context.Context, req *service.LoginReq) (*service.LoginResp, error) {
 	// 密码加密
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	hashedPassword := util.HashWithSalt(req.Password, req.Username)
+
+	u := query.User
+	tx := query.Q.Begin()
+	user, err := tx.User.Where(u.UserName.Eq(req.Username), u.Password.Eq(hashedPassword)).First()
+	if user == nil {
+		user, err = tx.User.Where(u.Email.Eq(req.Username)).First()
+		if user != nil {
+			hashedPassword = util.HashWithSalt(req.Password, user.UserName)
+			user, err = tx.User.Where(u.Email.Eq(req.Username), u.Password.Eq(hashedPassword)).First()
+		}
+	}
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "密码加密失败: %v", err)
+		tx.Rollback()
+		return nil, status.Errorf(codes.Internal, "用户登录失败: %v", err)
 	}
 
-	u := repository.User{
-		UserName: "1",
-		Password: "1",
-		Email:    "1",
+	token, err := jwt.GenerateToken(int64(user.ID))
+	if err != nil {
+		return nil, err
 	}
-	repository.DB.Create(&u)
 
-	// 示例返回 Token
+	err = tx.Commit()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "事务提交失败: %v", err)
+	}
+
 	return &service.LoginResp{
-		Token: string(hashedPassword),
+		Token: token,
 	}, nil
 }
