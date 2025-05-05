@@ -10,12 +10,14 @@ import (
 	"user/discovery"
 	"user/internal/handler"
 	"user/internal/repository"
+	"user/internal/repository/query"
 	service "user/internal/service/pb"
 )
 
 func main() {
 	conf.InitConfig()
 	repository.InitDB()
+	query.SetDefault(repository.DB)
 
 	//etcd
 	etcdAddress := []string{viper.GetString("etcd.address")}

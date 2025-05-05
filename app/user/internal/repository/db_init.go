@@ -11,7 +11,9 @@ import (
 	"time"
 )
 
-var DB *gorm.DB
+var (
+	DB *gorm.DB
+)
 
 func InitDB() {
 	host := viper.GetString("mysql.host")
@@ -49,6 +51,8 @@ func Database(dsn string) error {
 			SingularTable: true, // 使用单数表名，启用该选项，此时，`User` 表名将变成 `tb_user`
 		},
 	})
+
+	err = db.AutoMigrate(User{})
 	if err != nil {
 		return err
 	}

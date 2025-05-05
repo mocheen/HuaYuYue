@@ -6,8 +6,6 @@ package query
 
 import (
 	"context"
-	"strings"
-	"user/internal/repository"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -17,6 +15,8 @@ import (
 	"gorm.io/gen/field"
 
 	"gorm.io/plugin/dbresolver"
+
+	"user/internal/repository"
 )
 
 func newUser(db *gorm.DB) user {
@@ -162,30 +162,6 @@ type IUserDo interface {
 	Returning(value interface{}, columns ...string) IUserDo
 	UnderlyingDB() *gorm.DB
 	schema.Tabler
-
-	FilterWithNameAndRole(name string, role string) (result []*repository.User, err error)
-}
-
-// SELECT * FROM @@table WHERE name = @name{{if role !=""}} AND role = @role{{end}}
-func (u userDo) FilterWithNameAndRole(name string, role string) (result []*repository.User, err error) {
-	params := make(map[string]interface{}, 0)
-
-	var generateSQL strings.Builder
-	params["name"] = name
-	generateSQL.WriteString("SELECT * FROM users WHERE name = @name ")
-	if role != "" {
-		params["role"] = role
-		generateSQL.WriteString("AND role = @role ")
-	}
-
-	var executeSQL *gorm.DB
-	if len(params) > 0 {
-		executeSQL = u.UnderlyingDB().Raw(generateSQL.String(), params).Find(&result)
-	} else {
-		executeSQL = u.UnderlyingDB().Raw(generateSQL.String()).Find(&result)
-	}
-	err = executeSQL.Error
-	return
 }
 
 func (u userDo) Debug() IUserDo {

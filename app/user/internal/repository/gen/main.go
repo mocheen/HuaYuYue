@@ -2,6 +2,7 @@ package main
 
 import (
 	"gorm.io/gen"
+	"user/conf"
 	"user/internal/repository"
 )
 
@@ -12,6 +13,9 @@ type Querier interface {
 }
 
 func main() {
+	conf.InitConfig()
+	repository.InitDB()
+
 	g := gen.NewGenerator(gen.Config{
 		OutPath: "./internal/repository/query",
 		Mode:    gen.WithoutContext | gen.WithDefaultQuery | gen.WithQueryInterface, // generate mode
@@ -20,7 +24,8 @@ func main() {
 	g.UseDB(repository.DB)
 
 	// Generate Type Safe API with Dynamic SQL defined on Querier interface for `model.User` and `model.Company`
-	g.ApplyInterface(func(Querier) {}, repository.User{})
+	g.ApplyBasic(repository.User{})
+	//g.ApplyInterface(func(Querier) {}, repository.User{})
 
 	// Generate the code
 	g.Execute()
