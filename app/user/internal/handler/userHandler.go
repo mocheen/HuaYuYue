@@ -5,20 +5,27 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"sync"
 	"user/internal/repository"
 	"user/internal/repository/query"
 	service "user/internal/service/pb"
 )
 
-type UserService struct {
+var UserSrvIns *UserSrv
+var UserSrvOnce sync.Once
+
+type UserSrv struct {
 	service.UnimplementedUserServiceServer
 }
 
-func NewUserService() *UserService {
-	return &UserService{}
+func GetUserSrv() *UserSrv {
+	UserSrvOnce.Do(func() {
+		UserSrvIns = &UserSrv{}
+	})
+	return UserSrvIns
 }
 
-func (s *UserService) Register(ctx context.Context, req *service.RegisterReq) (*service.RegisterResp, error) {
+func (s *UserSrv) Register(ctx context.Context, req *service.RegisterReq) (*service.RegisterResp, error) {
 	// 实现注册逻辑
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -58,7 +65,7 @@ func (s *UserService) Register(ctx context.Context, req *service.RegisterReq) (*
 
 }
 
-func (s *UserService) Login(ctx context.Context, req *service.LoginReq) (*service.LoginResp, error) {
+func (s *UserSrv) Login(ctx context.Context, req *service.LoginReq) (*service.LoginResp, error) {
 	// 实现登录逻辑
 	fmt.Printf("Received Login Request: %+v\n", req)
 

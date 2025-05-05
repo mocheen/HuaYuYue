@@ -21,6 +21,7 @@ func main() {
 	etcdAddress := []string{viper.GetString("etcd.address")}
 	etcdRegister := discovery.NewRegister(etcdAddress, logrus.New())
 	grpcAddress := viper.GetString("server.grpcAddress")
+	defer etcdRegister.Stop()
 	userNode := discovery.Server{
 		Name:    viper.GetString("server.domain"),
 		Addr:    grpcAddress,
@@ -30,7 +31,7 @@ func main() {
 	srv := grpc.NewServer()
 	defer srv.Stop()
 
-	service.RegisterUserServiceServer(srv, handler.NewUserService())
+	service.RegisterUserServiceServer(srv, handler.GetUserSrv())
 
 	// 监听
 	lis, err := net.Listen("tcp", grpcAddress)

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"app/user/internal/repository"
 	"gorm.io/gen"
+	"user/internal/repository"
 )
 
 // Dynamic SQL

@@ -1,32 +1,41 @@
 package handler
 
 import (
-	"context"
 	"gateway/idl/pb/user"
-
-	"net/http"
-
+	"gateway/pkg/ctl"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
+
+func UserLogin(ctx *gin.Context) {
+
+	var req user.LoginReq
+	if err := ctx.Bind(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, ctl.RespError(ctx, err, "绑定参数错误"))
+		return
+	}
+	resp, err := UserClient.Login(ctx, &req)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, ctl.RespError(ctx, err, "UserLogin RPC服务调用错误"))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, ctl.RespSuccess(ctx, resp))
+
+}
 
 func UserRegister(ctx *gin.Context) {
 	var req user.RegisterReq
-	PanicIfUserError(ctx.Bind(&req))
+	if err := ctx.Bind(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, ctl.RespError(ctx, err, "绑定参数错误"))
+		return
+	}
+	resp, err := UserClient.Register(ctx, &req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, ctl.RespError(ctx, err, "UserRegister RPC服务调用错误"))
+		return
+	}
 
-	userService := ctx.Keys["user"].(user.UserServiceClient)
-	resp, err := userService.Register(context.Background(), &req)
-	PanicIfUserError(err)
-
-	ctx.JSON(http.StatusOK, resp)
-}
-
-func UserLogin(ctx *gin.Context) {
-	var req user.LoginReq
-	PanicIfUserError(ctx.Bind(&req))
-
-	userService := ctx.Keys["user"].(user.UserServiceClient)
-	resp, err := userService.Login(context.Background(), &req)
-	PanicIfUserError(err)
-
-	ctx.JSON(http.StatusOK, resp)
+	ctx.JSON(http.StatusOK, ctl.RespSuccess(ctx, resp))
 }

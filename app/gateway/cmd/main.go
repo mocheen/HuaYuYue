@@ -4,6 +4,7 @@ import (
 	"gateway/conf"
 	"gateway/discovery"
 	"gateway/idl/pb/user"
+	"gateway/internal/handler"
 	"gateway/routes"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -45,6 +46,7 @@ import (
 
 func main() {
 	conf.InitConfig()
+	handler.Init()
 
 	// 服务发现初始化
 	etcdAddress := []string{viper.GetString("etcd.address")}
