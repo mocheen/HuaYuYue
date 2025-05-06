@@ -2,9 +2,9 @@ package handler
 
 import (
 	"context"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"sync"
+	"user/e"
 	"user/internal/repository"
 	"user/internal/repository/query"
 	"user/jwt"
@@ -38,22 +38,22 @@ func (s *UserSrv) Register(ctx context.Context, req *service.RegisterReq) (*serv
 	count, err := tx.User.Where(u.Email.Eq(req.Email)).Count()
 	if err != nil {
 		tx.Rollback()
-		return nil, status.Errorf(codes.Internal, "数据库查询失败: %v", err)
+		return nil, status.Errorf(e.ErrorDatabase, "数据库查询失败: %v", err)
 	}
 	if count > 0 {
 		tx.Rollback()
-		return nil, status.Errorf(codes.AlreadyExists, "该邮箱已注册")
+		return nil, status.Errorf(e.ErrorUserAlreadyExist, "该邮箱已注册")
 	}
 
 	// 检查用户名是否已经存在
 	count, err = tx.User.Where(u.UserName.Eq(req.Username)).Count()
 	if err != nil {
 		tx.Rollback()
-		return nil, status.Errorf(codes.Internal, "数据库查询失败: %v", err)
+		return nil, status.Errorf(e.ErrorDatabase, "数据库查询失败: %v", err)
 	}
 	if count > 0 {
 		tx.Rollback()
-		return nil, status.Errorf(codes.AlreadyExists, "该用户名已存在")
+		return nil, status.Errorf(e.ErrorUserAlreadyExist, "该用户名已存在")
 	}
 
 	// 创建用户对象
@@ -67,13 +67,13 @@ func (s *UserSrv) Register(ctx context.Context, req *service.RegisterReq) (*serv
 	err = tx.User.Create(user)
 	if err != nil {
 		tx.Rollback()
-		return nil, status.Errorf(codes.Internal, "用户创建失败: %v", err)
+		return nil, status.Errorf(e.ErrorDatabase, "用户创建失败: %v", err)
 	}
 
 	// 提交事务
 	err = tx.Commit()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "事务提交失败: %v", err)
+		return nil, status.Errorf(e.ErrorDatabase, "事务提交失败: %v", err)
 	}
 
 	// 返回响应
@@ -99,7 +99,7 @@ func (s *UserSrv) Login(ctx context.Context, req *service.LoginReq) (*service.Lo
 	}
 	if err != nil {
 		tx.Rollback()
-		return nil, status.Errorf(codes.Internal, "用户登录失败: %v", err)
+		return nil, status.Errorf(e.ErrorDatabase, "用户名或密码错误: %v", err)
 	}
 
 	token, err := jwt.GenerateToken(int64(user.ID))
@@ -109,7 +109,7 @@ func (s *UserSrv) Login(ctx context.Context, req *service.LoginReq) (*service.Lo
 
 	err = tx.Commit()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "事务提交失败: %v", err)
+		return nil, status.Errorf(e.ErrorDatabase, "事务提交失败: %v", err)
 	}
 
 	return &service.LoginResp{

@@ -1,9 +1,11 @@
 package middleware
 
 import (
+	"errors"
 	"gateway/pkg/ctl"
 	"gateway/pkg/e"
 	"gateway/pkg/jwt"
+	"gateway/pkg/res"
 	"github.com/gin-gonic/gin"
 	"time"
 )
@@ -12,17 +14,12 @@ import (
 func JWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var code int
-		var data interface{}
 		code = 200
 		token := c.GetHeader("Authorization")
 		if token == "" {
-			code = 404
-			c.JSON(200, gin.H{
-				"status": code,
-				"msg":    e.GetMsg(code),
-				"data":   data,
-			})
-			c.Abort()
+			res.ErrorWithHTTPStatus(c, 401, e.ErrorAuthTokenInvalid,
+				errors.New("authorization header is missing or invalid"))
+			return
 		}
 		claims, err := jwt.ParseToken(token)
 		if err != nil {
@@ -31,12 +28,7 @@ func JWT() gin.HandlerFunc {
 			code = e.ErrorAuthCheckTokenTimeout
 		}
 		if code != e.SUCCESS {
-			c.JSON(200, gin.H{
-				"status": code,
-				"msg":    e.GetMsg(code),
-				"data":   data,
-			})
-			c.Abort()
+			res.ErrorWithHTTPStatus(c, 401, code, err)
 			return
 		}
 		c.Request = c.Request.WithContext(ctl.NewContext(c.Request.Context(), &ctl.UserInfo{Id: claims.UserID}))
