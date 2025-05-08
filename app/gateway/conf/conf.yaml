@@ -1,47 +1,23 @@
 server:
   port: 4000
   version: 1.0
-  jwtSecret: "FanOne"
+  jwtSecret: ${HUA_JWT_SECRET}
 
-mysql:
-  driverName: mysql
-  host: "192.168.114.129"
-  port: 3306
-  database: grpc_todolist
-  username: "root"
-  password: "123456"
-  charset: utf8mb4
-
-redis:
-  user_name: default
-  address: 127.0.0.1:6379
-  password:
 
 etcd:
-  address: 127.0.0.1:2379
+  address: ${HUA_ETCD_ADDRESS}
 
 services:
   gateway:
     name: gateway
     loadBalance: true
     addr:
-      - 127.0.0.1:10001
+      - ${HUA_GATEWAY_ADDRESS}
   user:
     name: user
     loadBalance: false
     addr:
-      - 127.0.0.1:10002
-
-domain:
-  user:
-    name: user
-  task:
-    name: task
-
-
-
-
-
+      - ${HUA_USER_SERVICE_ADDRESS}
 
 
 

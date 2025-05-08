@@ -1,25 +1,24 @@
 server:
   domain: user
   version: 1.0
-  jwtSecret: "FanOne"
-  grpcAddress: "127.0.0.1:10002"
+  jwtSecret: ${HUA_JWT_SECRET}
+  grpcAddress: ${HUA_USER_SERVICE_ADDRESS}
 
 mysql:
   driverName: mysql
-  host: "192.168.114.129"
-  port: "3306"
-  database: "user"
-  username: "root"
-  password: "123456"
+  host: ${HUA_USER_DB_HOST}
+  port: ${HUA_USER_DB_PORT}
+  database: user
+  username: ${HUA_USER_DB_USERNAME}
+  password: ${HUA_USER_DB_PASSWORD}
   charset: utf8mb4
 
 etcd:
-  address: "127.0.0.1:2379"
+  address: ${HUA_ETCD_ADDRESS}
 
 redis:
-  address: "127.0.0.1:6379"
-  username: ""
-  password: ""
+  address: ${HUA_REDIS_ADDRESS}
+  username: ${HUA_REDIS_USERNAME}
   db: 0
 
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"gateway/conf"
 	"gateway/discovery"
 	"gateway/idl/pb/user"
@@ -12,40 +13,9 @@ import (
 	"google.golang.org/grpc/resolver"
 )
 
-//func main() {
-//	conf.InitConfig()
-//	handler.Init()
-//
-//	go startListen() // 转载路由
-//	{
-//		osSignals := make(chan os.Signal, 1)
-//		signal.Notify(osSignals, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL)
-//		s := <-osSignals
-//		fmt.Println("exit! ", s)
-//	}
-//}
-//
-//func startListen() {
-//
-//	r := routes.NewRouter()
-//	server := &http.Server{
-//		Addr:           conf.Conf.Server.Port,
-//		Handler:        r,
-//		ReadTimeout:    10 * time.Second,
-//		WriteTimeout:   10 * time.Second,
-//		MaxHeaderBytes: 1 << 20,
-//	}
-//	if err := server.ListenAndServe(); err != nil {
-//		fmt.Println("gateway启动失败, err: ", err)
-//	}
-//	go func() {
-//		// 优雅关闭
-//		shutdown.GracefullyShutdown(server)
-//	}()
-//}
-
 func main() {
-	conf.InitConfig()
+	c := conf.GetConf()
+	fmt.Println(c.Server.Port)
 	handler.Init()
 
 	// 服务发现初始化

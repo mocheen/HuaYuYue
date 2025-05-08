@@ -31,7 +31,7 @@ func Init() {
 	ctx, CancelFunc = context.WithTimeout(context.Background(), 3*time.Second)
 
 	defer Register.Close()
-	initClient(conf.Conf.Domain["user"].Name, &UserClient)
+	initClient("user", &UserClient)
 }
 
 func initClient(serviceName string, client interface{}) {
