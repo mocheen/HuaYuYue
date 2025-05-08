@@ -10,16 +10,24 @@ import (
 func NewRouter(service ...interface{}) *gin.Engine {
 	ginRouter := gin.Default()
 	ginRouter.Use(middleware.Cors(), middleware.ErrorMiddleware())
-	v1 := ginRouter.Group("/api/v1")
+	// 公共路由组 - 不需要JWT验证
+	public := ginRouter.Group("/api/v1")
 	{
-		v1.GET("/ping", func(c *gin.Context) {
+		public.GET("/ping", func(c *gin.Context) {
 			c.JSON(200, gin.H{
 				"message": "pong",
 			})
 		})
-
-		v1.POST("/user/register", handler.UserRegister)
-		v1.POST("/user/login", handler.UserLogin)
+		public.POST("/user/register", handler.UserRegister)
+		public.POST("/user/login", handler.UserLogin)
 	}
+
+	// 私有路由组 - 需要JWT验证
+	private := ginRouter.Group("/api/v1")
+	private.Use(middleware.JWT()) // 应用JWT中间件
+	{
+
+	}
+
 	return ginRouter
 }

@@ -1,21 +1,44 @@
 package res
 
-// Response 基础序列化器
+import (
+	"gateway/pkg/e"
+	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+// 统一响应结构体
 type Response struct {
-	Status int         `json:"status"`
-	Data   interface{} `json:"data"`
-	Msg    string      `json:"msg"`
-	Error  string      `json:"error"`
+	Status  int         `json:"status"`  // 业务状态码
+	Message string      `json:"message"` // 提示信息
+	Data    interface{} `json:"data"`    // 数据
+	Error   string      `json:"error"`   // 错误详情(开发调试用)
 }
 
-// DataList 带有总数的Data结构
-type DataList struct {
-	Item  interface{} `json:"item"`
-	Total int64       `json:"total"`
+// 成功响应
+func Success(c *gin.Context, data interface{}) {
+	c.JSON(http.StatusOK, Response{
+		Status:  e.SUCCESS,
+		Message: e.GetMsg(e.SUCCESS),
+		Data:    data,
+	})
 }
 
-// TokenData 带有token的Data结构
-type TokenData struct {
-	User  interface{} `json:"user"`
-	Token string      `json:"token"`
+// 失败响应
+func Error(c *gin.Context, status int, err error) {
+	c.JSON(http.StatusOK, Response{
+		Status:  status,
+		Message: e.GetMsg(status),
+		Error:   err.Error(),
+	})
+	c.Abort()
+}
+
+// 带HTTP状态码的失败响应
+func ErrorWithHTTPStatus(c *gin.Context, httpStatus, bizStatus int, err error) {
+	c.JSON(httpStatus, Response{
+		Status:  bizStatus,
+		Message: e.GetMsg(bizStatus),
+		Error:   err.Error(),
+	})
+	c.Abort()
 }

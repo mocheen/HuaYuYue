@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm/schema"
 	"strings"
 	"time"
+	"user/conf"
 )
 
 var (
@@ -16,7 +17,7 @@ var (
 )
 
 func InitDB() {
-	host := viper.GetString("mysql.host")
+	host := conf.Conf.MySQL.Host
 	port := viper.GetString("mysql.port")
 	database := viper.GetString("mysql.database")
 	username := viper.GetString("mysql.username")
