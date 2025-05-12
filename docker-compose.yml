@@ -1,0 +1,75 @@
+
+
+services:
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.0
+    ports:
+      - "2379:2379"
+    environment:
+      - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+    networks:
+      - go-micro-net
+  # 网关服务
+  gateway:
+    build:
+      context: ./app/gateway
+    ports:
+      - "4000:4000"
+    environment:
+      - HUA_JWT_SECRET=50b7b2b7db6dfdbf1cc7b471ce4e52ea
+      - HUA_ETCD_ADDRESS=etcd:2379
+      - HUA_GATEWAY_ADDRESS=127.0.0.1:10001
+      - HUA_USER_SERVICE_ADDRESS=user:10002
+    depends_on:
+      - user
+    networks:
+      - go-micro-net
+
+  # 用户服务
+  user:
+    build:
+      context: ./app/user
+    ports:
+      - "10002:10002"
+    networks:
+      - go-micro-net
+
+    environment:
+      - HUA_USER_DB_HOST=db  # 必须使用服务名
+      - HUA_USER_DB_PORT=3306
+      - HUA_USER_DB_USERNAME=root
+      - HUA_USER_DB_PASSWORD=123456 # 从.env文件读取
+      - HUA_USER_DB_CHARSET=utf8mb4
+
+      # 其他服务配置
+      - HUA_JWT_SECRET=50b7b2b7db6dfdbf1cc7b471ce4e52ea
+      - HUA_USER_SERVICE_ADDRESS=user:10002
+      - HUA_ETCD_ADDRESS=etcd:2379  # 可选
+      - HUA_REDIS_ADDRESS=redis:6379 # 可选
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: user
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-uroot", "-p123456" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - go-micro-net
+
+networks:
+  go-micro-net:
+    driver: bridge
+
+volumes:
+  db_data:

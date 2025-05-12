@@ -3,12 +3,12 @@ package conf
 import (
 	"bytes"
 	_ "embed"
+	"github.com/joho/godotenv"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
 
-	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -48,11 +48,6 @@ func GetConf() *Config {
 }
 
 func initConf() {
-	// 1. 加载.env文件
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
-
 	// 2. 初始化Viper
 	viper.SetConfigType("yaml")
 	if err := viper.ReadConfig(bytes.NewBuffer(configFile)); err != nil {
@@ -63,6 +58,13 @@ func initConf() {
 	viper.SetEnvPrefix("HUA")
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+
+	// 4. 尝试加载 .env 文件（如果有），并用其覆盖当前 Viper 中的值
+	if err := godotenv.Overload(); err == nil {
+		log.Println(".env file loaded and overwriting environment variables")
+	} else {
+		log.Println("No .env file found, using system environment variables only")
+	}
 
 	// 4. 处理环境变量替换
 	for _, key := range viper.AllKeys() {

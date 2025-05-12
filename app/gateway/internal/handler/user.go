@@ -2,7 +2,7 @@ package handler
 
 import (
 	"errors"
-	"gateway/idl/pb/user"
+	"gateway/idl/user"
 	"gateway/pkg/e"
 	"gateway/pkg/res"
 	"github.com/gin-gonic/gin"

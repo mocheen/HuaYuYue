@@ -5,7 +5,8 @@ option go_package = "/internal/service;service";
 message RegisterReq {
   string email = 1;
   string password = 2;
-  string username = 3;
+  string confirm_password = 3;
+  string username = 4;
 }
 
 message RegisterResp {

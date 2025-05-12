@@ -1,0 +1,60 @@
+name: Microservice Deploy to Aliyun ACR
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 登录阿里云容器镜像服务
+      - name: Login to Aliyun ACR
+        uses: docker/login-action@v2
+        with:
+          registry: crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com
+          username: ${{ secrets.ALIYUN_ACR_USERNAME }}
+          password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+
+      # 构建并推送gateway服务
+      - name: Build and push gateway
+        uses: docker/build-push-action@v4
+        with:
+          context: ./app/gateway
+          tags: |
+            crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-gateway:latest
+            crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-gateway:${{ github.sha }}
+          push: true
+
+      # 构建并推送user服务
+      - name: Build and push user
+        uses: docker/build-push-action@v4
+        with:
+          context: ./app/user
+          tags: |
+            crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-user:latest
+            crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-user:${{ github.sha }}
+          push: true
+
+      # 服务器部署
+      - name: Deploy to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker login --username=$ALIYUN_ACR_USERNAME --password=$ALIYUN_ACR_PASSWORD crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com
+            
+            cd /opt/your-project
+            # 拉取最新镜像（使用VPC内网地址加速）
+            docker-compose pull
+            # 只更新gateway和user服务
+            docker-compose up -d --no-deps gateway user
+            # 清理无用镜像
+            docker system prune -f
+        env:
+          ALIYUN_ACR_USERNAME: ${{ secrets.ALIYUN_ACR_USERNAME }}
+          ALIYUN_ACR_PASSWORD: ${{ secrets.ALIYUN_ACR_PASSWORD }}
