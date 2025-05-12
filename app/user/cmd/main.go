@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -15,8 +14,7 @@ import (
 )
 
 func main() {
-	c := conf.GetConf()
-	fmt.Println("111" + c.MySQL.Host)
+	conf.GetConf()
 	repository.InitDB()
 	query.SetDefault(repository.DB)
 

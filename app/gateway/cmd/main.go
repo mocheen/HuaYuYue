@@ -1,10 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"gateway/conf"
 	"gateway/discovery"
-	"gateway/idl/pb/user"
+	"gateway/idl/user"
 	"gateway/internal/handler"
 	"gateway/routes"
 	"github.com/sirupsen/logrus"
@@ -14,8 +13,7 @@ import (
 )
 
 func main() {
-	c := conf.GetConf()
-	fmt.Println(c.Server.Port)
+	conf.GetConf()
 	handler.Init()
 
 	// 服务发现初始化

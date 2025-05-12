@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"gateway/conf"
 	"gateway/discovery"
-	"gateway/idl/pb/user"
+	"gateway/idl/user"
 
 	"log"
 	"time"
@@ -31,7 +31,7 @@ func Init() {
 	ctx, CancelFunc = context.WithTimeout(context.Background(), 3*time.Second)
 
 	defer Register.Close()
-	initClient("user", &UserClient)
+	initClient(conf.Conf.Services["user"].Name, &UserClient)
 }
 
 func initClient(serviceName string, client interface{}) {

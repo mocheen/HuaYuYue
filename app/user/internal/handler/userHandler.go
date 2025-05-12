@@ -28,6 +28,10 @@ func GetUserSrv() *UserSrv {
 }
 
 func (s *UserSrv) Register(ctx context.Context, req *service.RegisterReq) (*service.RegisterResp, error) {
+	if req.ConfirmPassword != req.Password {
+		return nil, status.Errorf(e.ErrorInvalidParams, "密码不一致")
+	}
+
 	// 密码加密
 	hashedPassword := util.HashWithSalt(req.Password, req.Username)
 
