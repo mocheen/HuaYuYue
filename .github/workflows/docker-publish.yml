@@ -93,7 +93,7 @@ jobs:
               -e HUA_USER_DB_CHARSET=utf8mb4 \
               -e HUA_JWT_SECRET=50b7b2b7db6dfdbf1cc7b471ce4e52ea \
               -e HUA_ETCD_ADDRESS=etcd:2379 \
-              crpi-9koetp78bl09eg2k-vpc.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-user:latest
+              crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-user:latest
         
               # 5. 启动Gateway服务（等待User服务）
               docker run -d --name gateway \
@@ -103,7 +103,7 @@ jobs:
               -e HUA_ETCD_ADDRESS=etcd:2379 \
               -e HUA_GATEWAY_ADDRESS=127.0.0.1:10001 \
               -e HUA_USER_SERVICE_ADDRESS=user:10002 \
-              crpi-9koetp78bl09eg2k-vpc.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-gateway:latest
+              crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-gateway:latest
         
               # 6. 清理旧镜像（保留最近2个版本）
               docker image prune -af --filter "until=48h"
