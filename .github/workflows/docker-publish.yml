@@ -38,23 +38,72 @@ jobs:
             crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-user:${{ github.sha }}
           push: true
 
-      # 服务器部署
-      - name: Deploy to server
+      # 设置SSH目录和密钥权限
+      - name: Setup SSH Environment
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.JUMPSERVER_PRIVATE_KEY }}" > ~/.ssh/jumpserver.pem
+          chmod 600 ~/.ssh/jumpserver.pem
+          ssh-keyscan -p 2222 jumpserver.99.suyiiyii.top >> ~/.ssh/known_hosts
+
+      #通过SSH连接JumpServer
+      - name: Run Commands on Target Server
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: jumpserver.99.suyiiyii.top
+          port: 2222
+          username: ${{ secrets.JUMPSERVER_USERNAME }}
+          key: ${{ secrets.JUMPSERVER_PRIVATE_KEY }}
+          #  执行部署命令
           script: |
-            docker login --username=$ALIYUN_ACR_USERNAME --password=$ALIYUN_ACR_PASSWORD crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com
-            
-            cd /opt/your-project
-            # 拉取最新镜像（使用VPC内网地址加速）
-            docker-compose pull
-            # 只更新gateway和user服务
-            docker-compose up -d --no-deps gateway user
-            # 清理无用镜像
-            docker system prune -f
-        env:
-          ALIYUN_ACR_USERNAME: ${{ secrets.ALIYUN_ACR_USERNAME }}
-          ALIYUN_ACR_PASSWORD: ${{ secrets.ALIYUN_ACR_PASSWORD }}
+            cd /opt/HuaYuYue
+              # 1. 创建自定义网络（如果不存在）
+              docker network inspect go-micro-net >/dev/null 2>&1 || \
+              docker network create go-micro-net
+        
+              # 2. 启动ETCD容器
+              docker run -d --name etcd \
+              --network go-micro-net \
+              -p 2379:2379 \
+              -e ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379 \
+              -e ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379 \
+              quay.io/coreos/etcd:v3.5.0
+        
+              # 3. 启动MySQL容器（带持久化卷）
+              docker run -d --name db \
+              --network go-micro-net \
+              -v db_data:/var/lib/mysql \
+              -e MYSQL_ROOT_PASSWORD=123456 \
+              -e MYSQL_DATABASE=user \
+              -p 3306:3306 \
+              --health-cmd="mysqladmin ping -uroot -p123456" \
+              --health-interval=5s \
+              --health-timeout=3s \
+              --health-retries=10 \
+              mysql:8.0
+        
+              # 4. 启动User服务（等待MySQL健康状态）
+              docker run -d --name user \
+              --network go-micro-net \
+              -p 10002:10002 \
+              -e HUA_USER_DB_HOST=db \
+              -e HUA_USER_DB_PORT=3306 \
+              -e HUA_USER_DB_USERNAME=root \
+              -e HUA_USER_DB_PASSWORD=123456 \
+              -e HUA_USER_DB_CHARSET=utf8mb4 \
+              -e HUA_JWT_SECRET=50b7b2b7db6dfdbf1cc7b471ce4e52ea \
+              -e HUA_ETCD_ADDRESS=etcd:2379 \
+              crpi-9koetp78bl09eg2k-vpc.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-user:latest
+        
+              # 5. 启动Gateway服务（等待User服务）
+              docker run -d --name gateway \
+              --network go-micro-net \
+              -p 4000:4000 \
+              -e HUA_JWT_SECRET=50b7b2b7db6dfdbf1cc7b471ce4e52ea \
+              -e HUA_ETCD_ADDRESS=etcd:2379 \
+              -e HUA_GATEWAY_ADDRESS=127.0.0.1:10001 \
+              -e HUA_USER_SERVICE_ADDRESS=user:10002 \
+              crpi-9koetp78bl09eg2k-vpc.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-gateway:latest
+        
+              # 6. 清理旧镜像（保留最近2个版本）
+              docker image prune -af --filter "until=48h"
