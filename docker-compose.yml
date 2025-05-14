@@ -30,8 +30,7 @@ services:
 
   # 网关服务
   gateway:
-    build:
-      context: ./app/gateway
+    image: crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-gateway:latest
     ports:
       - "4000:4000"
     environment:
@@ -46,8 +45,7 @@ services:
 
   # 用户服务
   user:
-    build:
-      context: ./app/user
+    image: crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-user:latest
     ports:
       - "10002:10002"
     networks:
