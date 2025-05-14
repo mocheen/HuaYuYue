@@ -10,6 +10,24 @@ services:
       - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
     networks:
       - go-micro-net
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: user
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-uroot", "-p123456" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - go-micro-net
+
   # 网关服务
   gateway:
     build:
@@ -22,7 +40,7 @@ services:
       - HUA_GATEWAY_ADDRESS=127.0.0.1:10001
       - HUA_USER_SERVICE_ADDRESS=user:10002
     depends_on:
-      - user
+      - etcd
     networks:
       - go-micro-net
 
@@ -49,23 +67,8 @@ services:
       - HUA_REDIS_ADDRESS=redis:6379 # 可选
     depends_on:
       - db
-
-  db:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: 123456
-      MYSQL_DATABASE: user
-    volumes:
-      - db_data:/var/lib/mysql
-    ports:
-      - "3306"
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-uroot", "-p123456" ]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    networks:
-      - go-micro-net
+      - etcd
+      - gateway
 
 networks:
   go-micro-net:
