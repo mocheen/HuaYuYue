@@ -56,8 +56,11 @@ jobs:
           key: ${{ secrets.JUMPSERVER_PRIVATE_KEY }}
           source: "docker-compose.yml"
           target: "/opt/HuaYuYue/"
+          strip_components: 1  # 防止路径嵌套
+          overwrite: true      # 强制覆盖已存在文件
+          rm: false            # 不自动删除临时文件
 
-      #通过SSH连接JumpServer
+      # 通过SSH连接JumpServer执行部署操作
       - name: Run Commands on Target Server
         uses: appleboy/ssh-action@master
         with:
@@ -66,11 +69,17 @@ jobs:
           username: ${{ secrets.JUMPSERVER_USERNAME }}
           key: ${{ secrets.JUMPSERVER_PRIVATE_KEY }}
           script: |
-            cd /opt/HuaYuYue
-
-            docker compose pull user gateway
+            # 确保目录存在
+            mkdir -p /opt/HuaYuYue
             
-            docker compose up -d
+            # 检查文件是否已传输成功
+            ls -la /opt/HuaYuYue/docker-compose.yml
+            
+            # 拉取最新镜像
+            docker compose -f /opt/HuaYuYue/docker-compose.yml pull user gateway
+            
+            # 启动容器
+            docker compose -f /opt/HuaYuYue/docker-compose.yml up -d
 
 
 
