@@ -19,24 +19,24 @@ jobs:
           password: ${{ secrets.ALIYUN_ACR_PASSWORD }}
 
       # 构建并推送gateway服务
-#      - name: Build and push gateway
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: ./app/gateway
-#          tags: |
-#            crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-gateway:latest
-#            crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-gateway:${{ github.sha }}
-#          push: true
+      - name: Build and push gateway
+        uses: docker/build-push-action@v4
+        with:
+          context: ./app/gateway
+          tags: |
+            crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-gateway:latest
+            crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-gateway:${{ github.sha }}
+          push: true
 
       # 构建并推送user服务
-#      - name: Build and push user
-#        uses: docker/build-push-action@v4
-#        with:
-#          context: ./app/user
-#          tags: |
-#            crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-user:latest
-#            crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-user:${{ github.sha }}
-#          push: true
+      - name: Build and push user
+        uses: docker/build-push-action@v4
+        with:
+          context: ./app/user
+          tags: |
+            crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-user:latest
+            crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-user:${{ github.sha }}
+          push: true
 
       # 设置SSH目录和密钥权限
       - name: Setup SSH Environment
