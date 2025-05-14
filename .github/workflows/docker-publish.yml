@@ -48,18 +48,13 @@ jobs:
           
       # 复制 docker-compose.yml 到服务器
       - name: Copy docker-compose.yml to Server
-        uses: appleboy/scp-action@master
-        with:
-          os:  linux
-          host: jumpserver.99.suyiiyii.top
-          port: 2222
-          username: ${{ secrets.JUMPSERVER_USERNAME }}
-          key: ${{ secrets.JUMPSERVER_PRIVATE_KEY }}
-          source: "docker-compose.yml"
-          target: "/opt/HuaYuYue/"
-          strip_components: 1  # 防止路径嵌套
-          overwrite: true      # 强制覆盖已存在文件
-          rm: false            # 不自动删除临时文件
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.JUMPSERVER_PRIVATE_KEY }}" > ~/.ssh/jumpserver.pem
+          chmod 600 ~/.ssh/jumpserver.pem
+          rsync -avz -e "ssh -p 2222 -i ~/.ssh/jumpserver.pem -o StrictHostKeyChecking=no" \
+            ./docker-compose.yml \
+            ${{ secrets.JUMPSERVER_USERNAME }}@jumpserver.99.suyiiyii.top:/opt/HuaYuYue/
 
       # 通过SSH连接JumpServer执行部署操作
       - name: Run Commands on Target Server
