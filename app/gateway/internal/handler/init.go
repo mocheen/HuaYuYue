@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gateway/conf"
 	"gateway/discovery"
+	"gateway/idl/role"
 	"gateway/idl/user"
 
 	"log"
@@ -22,6 +23,7 @@ var (
 	CancelFunc context.CancelFunc
 
 	UserClient user.UserServiceClient
+	RoleClient role.RoleServiceClient
 )
 
 func Init() {
@@ -32,6 +34,7 @@ func Init() {
 
 	defer Register.Close()
 	initClient(conf.Conf.Services["user"].Name, &UserClient)
+	initClient(conf.Conf.Services["role"].Name, &RoleClient)
 }
 
 func initClient(serviceName string, client interface{}) {

@@ -5,6 +5,8 @@ const (
 	ERROR        = 500
 	ServiceError = 400
 
+	ErrorRole = 50010
+
 	// 认证相关错误
 	ErrorAuthCheckTokenFail    = 10001
 	ErrorAuthCheckTokenTimeout = 10002

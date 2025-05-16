@@ -18,6 +18,11 @@ services:
     loadBalance: false
     addr:
       - ${HUA_USER_SERVICE_ADDRESS}
+  role:
+    name: roel
+    loadBalance: false
+    addr:
+      - ${HUA_ROLE_SERVICE_ADDRESS}
 
 
 

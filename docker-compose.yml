@@ -8,12 +8,21 @@ services:
     environment:
       - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
       - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+      - ETCD_GO_KEEPALIVE_MIN_TIME=10s  # Go 客户端最小保活间隔
     command: [
       "etcd",
-      "--heartbeat-interval=1000", # 调低ETCD心跳
-      "--election-timeout=3000",
-      "--max-txn-ops=10240"
+      "--heartbeat-interval=1000",
+      "--election-timeout=5000",
+      "--max-txn-ops=10240",
+      "--auto-compaction-retention=2h",
+      "--auto-compaction-mode=revision",
+      "--enable-pprof=true"  # 开启性能监控
     ]
+    healthcheck:
+      test: [ "CMD", "etcdctl", "endpoint", "health" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
     networks:
       - go-micro-net
 
