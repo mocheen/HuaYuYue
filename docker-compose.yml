@@ -8,6 +8,12 @@ services:
     environment:
       - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
       - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+    command: [
+      "etcd",
+      "--heartbeat-interval=1000", # 调低ETCD心跳
+      "--election-timeout=3000",
+      "--max-txn-ops=10240"
+    ]
     networks:
       - go-micro-net
 
@@ -66,6 +72,9 @@ services:
       - HUA_USER_SERVICE_ADDRESS=user:10002
       - HUA_ETCD_ADDRESS=etcd:2379  # 可选
       - HUA_REDIS_ADDRESS=redis:6379 # 可选
+
+      - ETCD_TTL=30           # 注册TTL（秒）
+      - ETCD_RETRY_INTERVAL=15 # 重试间隔
     depends_on:
       db:
           condition: service_healthy

@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"role/ctl"
 	"role/e"
@@ -27,7 +28,7 @@ func GetRoleSrv() *RoleSrv {
 	return RoleSrvIns
 }
 
-func (s *RoleSrv) SelRole(ctx context.Context) (*service.SelRoleResp, error) {
+func (s *RoleSrv) SelRole(ctx context.Context, _ *emptypb.Empty) (*service.SelRoleResp, error) {
 	// 拿到当前用户id
 	userInfo, success := ctl.FromContext(ctx)
 	if !success {
@@ -58,7 +59,8 @@ func (s *RoleSrv) SelRole(ctx context.Context) (*service.SelRoleResp, error) {
 	return resp, nil
 }
 
-func (s *RoleSrv) AddRole(ctx context.Context, req *service.AddRoleReq) error {
+func (s *RoleSrv) AddRole(ctx context.Context, req *service.AddRoleReq) (*emptypb.Empty, error) {
+	em := &emptypb.Empty{}
 	userRole := &repository.UserRole{
 		UserId: req.UserId,
 		RoleID: e.USER,
@@ -68,24 +70,25 @@ func (s *RoleSrv) AddRole(ctx context.Context, req *service.AddRoleReq) error {
 	err := tx.UserRole.Create(userRole)
 	if err != nil {
 		tx.Rollback()
-		return status.Errorf(e.ErrorDatabase, "数据库插入失败: %v", err)
+		return em, status.Errorf(e.ErrorDatabase, "数据库插入失败: %v", err)
 	}
 	err = tx.Commit()
 	if err != nil {
-		return status.Errorf(e.ErrorDatabase, "事务提交失败: %v", err)
+		return em, status.Errorf(e.ErrorDatabase, "事务提交失败: %v", err)
 	}
-	return nil
+	return em, nil
 }
 
-func (s *RoleSrv) NewAdminAPL(ctx context.Context, req *service.NewAdminAPLReq) error {
+func (s *RoleSrv) NewAdminAPL(ctx context.Context, req *service.NewAdminAPLReq) (*emptypb.Empty, error) {
+	em := &emptypb.Empty{}
 	// 检查是否为普通用户
 	tx := query.Q.Begin()
-	role, err := s.SelRole(ctx)
+	role, err := s.SelRole(ctx, nil)
 	if err != nil {
-		return err
+		return em, err
 	}
 	if role.RoleId != e.USER {
-		return status.Errorf(e.ERRORROLE, "用户已经为管理员: %v", err)
+		return em, status.Errorf(e.ERRORROLE, "用户已经为管理员: %v", err)
 	}
 	adminAPL := &repository.AdminAPL{
 		APLComment: req.APLComment,
@@ -94,19 +97,19 @@ func (s *RoleSrv) NewAdminAPL(ctx context.Context, req *service.NewAdminAPLReq) 
 	err = tx.AdminAPL.Create(adminAPL)
 	if err != nil {
 		tx.Rollback()
-		return status.Errorf(e.ErrorDatabase, "数据库插入失败: %v", err)
+		return em, status.Errorf(e.ErrorDatabase, "数据库插入失败: %v", err)
 	}
 	err = tx.Commit()
 	if err != nil {
-		return status.Errorf(e.ErrorDatabase, "事务提交失败: %v", err)
+		return em, status.Errorf(e.ErrorDatabase, "事务提交失败: %v", err)
 	}
-	return nil
+	return em, nil
 }
 
-func (s *RoleSrv) SelAdminAPL(ctx context.Context) (*service.SelAdminAPLResp, error) {
+func (s *RoleSrv) SelAdminAPL(ctx context.Context, _ *emptypb.Empty) (*service.SelAdminAPLResp, error) {
 	// 判断是否为超级管理员
 	tx := query.Q.Begin()
-	role, err := s.SelRole(ctx)
+	role, err := s.SelRole(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -153,21 +156,21 @@ func (s *RoleSrv) SelAdminAPL(ctx context.Context) (*service.SelAdminAPLResp, er
 	return resp, nil
 }
 
-func (s *RoleSrv) RevAdminAPL(ctx context.Context, req *service.RevAdminAPLReq) error {
+func (s *RoleSrv) RevAdminAPL(ctx context.Context, req *service.RevAdminAPLReq) (*emptypb.Empty, error) {
 	// 判断是否为超级管理员
 	tx := query.Q.Begin()
-	role, err := s.SelRole(ctx)
+	role, err := s.SelRole(ctx, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if role.RoleId != e.SUPERADMIN {
-		return status.Errorf(e.ERRORROLE, "用户不是超级管理员: %v", err)
+		return nil, status.Errorf(e.ERRORROLE, "用户不是超级管理员: %v", err)
 	}
 	// 查询要更新的申请记录
 	adminAPL, err := tx.AdminAPL.Where(query.AdminAPL.ID.Eq(uint(req.Id))).Find()
 	if err != nil || len(adminAPL) > 1 {
 		tx.Rollback()
-		return status.Errorf(e.ErrorDatabase, "数据库查询失败: %v", err)
+		return nil, status.Errorf(e.ErrorDatabase, "数据库查询失败: %v", err)
 	}
 	// 更新管理员申请记录
 	_, err = tx.AdminAPL.Where(query.AdminAPL.ID.Eq(uint(req.Id))).
@@ -178,7 +181,7 @@ func (s *RoleSrv) RevAdminAPL(ctx context.Context, req *service.RevAdminAPLReq) 
 		})
 	if err != nil {
 		tx.Rollback()
-		return status.Errorf(e.ErrorDatabase, "数据库更新失败: %v", err)
+		return nil, status.Errorf(e.ErrorDatabase, "数据库更新失败: %v", err)
 	}
 
 	// 如果审核通过，为用户添加管理员角色
@@ -189,14 +192,14 @@ func (s *RoleSrv) RevAdminAPL(ctx context.Context, req *service.RevAdminAPLReq) 
 			})
 		if err != nil {
 			tx.Rollback()
-			return status.Errorf(e.ErrorDatabase, "数据库更新失败: %v", err)
+			return nil, status.Errorf(e.ErrorDatabase, "数据库更新失败: %v", err)
 		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return status.Errorf(e.ErrorDatabase, "事务提交失败: %v", err)
+		return nil, status.Errorf(e.ErrorDatabase, "事务提交失败: %v", err)
 	}
 
-	return nil
+	return nil, nil
 }
