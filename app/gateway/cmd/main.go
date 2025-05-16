@@ -3,7 +3,6 @@ package main
 import (
 	"gateway/conf"
 	"gateway/discovery"
-	"gateway/idl/role"
 	"gateway/idl/user"
 	"gateway/internal/handler"
 	"gateway/routes"
@@ -28,17 +27,17 @@ func main() {
 
 	// 创建 gRPC 连接并生成客户端实例
 	userServiceConn := getConn(conf.Conf.Services["user"].Name, etcdAddress, logger)
-	roleServiceConn := getConn(conf.Conf.Services["role"].Name, etcdAddress, logger)
+	//roleServiceConn := getConn(conf.Conf.Services["role"].Name, etcdAddress, logger)
 
 	defer userServiceConn.Close()
-	defer roleServiceConn.Close()
+	//defer roleServiceConn.Close()
 
 	// 创建 Client 实例
 	userServiceClient := user.NewUserServiceClient(userServiceConn)
-	roleServiceClient := role.NewRoleServiceClient(roleServiceConn)
+	//roleServiceClient := role.NewRoleServiceClient(roleServiceConn)
 
 	// 传递客户端实例而非连接对象
-	ginRouter := routes.NewRouter(userServiceClient, roleServiceClient)
+	ginRouter := routes.NewRouter(userServiceClient)
 	if err := ginRouter.Run(":4000"); err != nil {
 		logger.Fatalf("failed to start gateway: %v", err)
 	}
