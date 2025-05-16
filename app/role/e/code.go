@@ -6,7 +6,7 @@ const (
 	ServiceError = 400
 
 	ErrorDatabase = 40010
-	ERRORROLE     = 50010
+	ErrorRole     = 50010
 
 	// 认证相关错误
 	ErrorAuthCheckTokenFail    = 10001

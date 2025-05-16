@@ -26,7 +26,7 @@ func NewRouter(service ...interface{}) *gin.Engine {
 	private := ginRouter.Group("/api/v1")
 	private.Use(middleware.JWT()) // 应用JWT中间件
 	{
-
+		public.GET("/role/selRole", handler.SelRole)
 	}
 
 	return ginRouter

@@ -88,7 +88,7 @@ func (s *RoleSrv) NewAdminAPL(ctx context.Context, req *service.NewAdminAPLReq) 
 		return em, err
 	}
 	if role.RoleId != e.USER {
-		return em, status.Errorf(e.ERRORROLE, "用户已经为管理员: %v", err)
+		return em, status.Errorf(e.ErrorRole, "用户已经为管理员: %v", err)
 	}
 	adminAPL := &repository.AdminAPL{
 		APLComment: req.APLComment,
@@ -164,7 +164,7 @@ func (s *RoleSrv) RevAdminAPL(ctx context.Context, req *service.RevAdminAPLReq) 
 		return nil, err
 	}
 	if role.RoleId != e.SUPERADMIN {
-		return nil, status.Errorf(e.ERRORROLE, "用户不是超级管理员: %v", err)
+		return nil, status.Errorf(e.ErrorRole, "用户不是超级管理员: %v", err)
 	}
 	// 查询要更新的申请记录
 	adminAPL, err := tx.AdminAPL.Where(query.AdminAPL.ID.Eq(uint(req.Id))).Find()
