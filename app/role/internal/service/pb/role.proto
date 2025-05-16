@@ -1,0 +1,52 @@
+syntax="proto3";
+package pb;
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+option go_package = "/internal/service;service";
+
+message SelRoleResp {
+  int32 role_id = 1;
+}
+
+message AddRoleReq {
+  int32 user_id = 1;
+}
+
+message NewAdminAPLReq {
+  string APLComment = 1;
+}
+
+message SelAdminAPLResp {
+  repeated AdminApl adminApl = 1;
+}
+
+message RevAdminAPLReq {
+  int32 Id = 1;
+  int32 status = 2;
+  string REVComment = 3;
+}
+
+message AdminApl{
+  int32 Id = 1;
+  int32 user_id = 2;
+  int32 status =  3;
+  string APLComment = 4;
+  string REVComment = 5;
+  google.protobuf.Timestamp create_at = 6;
+  google.protobuf.Timestamp update_at = 7;
+}
+
+
+
+service RoleService {
+  rpc SelRole(google.protobuf.Empty) returns (SelRoleResp) {
+  }
+  rpc AddRole(AddRoleReq) returns (google.protobuf.Empty) {
+  }
+  rpc NewAdminAPL(NewAdminAPLReq) returns (google.protobuf.Empty) {
+  }
+  rpc SelAdminAPL(google.protobuf.Empty) returns (SelAdminAPLResp) {
+  }
+  rpc RevAdminAPL(RevAdminAPLReq) returns (google.protobuf.Empty) {
+  }
+}

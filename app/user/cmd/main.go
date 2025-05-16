@@ -39,7 +39,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if _, err := etcdRegister.Register(userNode, 10); err != nil {
+	if _, err := etcdRegister.Register(userNode, 30); err != nil {
 		panic(err)
 	}
 	if err = srv.Serve(lis); err != nil {

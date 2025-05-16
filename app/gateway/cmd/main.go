@@ -33,7 +33,7 @@ func main() {
 	}
 	defer userServiceConn.Close()
 
-	// 关键修改：创建 UserServiceClient 实例
+	// 创建 UserServiceClient 实例
 	userServiceClient := user.NewUserServiceClient(userServiceConn)
 
 	// 传递客户端实例而非连接对象

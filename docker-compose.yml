@@ -8,6 +8,12 @@ services:
     environment:
       - ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
       - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+    command: [
+      "etcd",
+      "--heartbeat-interval=1000", # 调低ETCD心跳
+      "--election-timeout=3000",
+      "--max-txn-ops=10240"
+    ]
     networks:
       - go-micro-net
 
@@ -38,10 +44,13 @@ services:
       - HUA_ETCD_ADDRESS=etcd:2379
       - HUA_GATEWAY_ADDRESS=127.0.0.1:10001
       - HUA_USER_SERVICE_ADDRESS=user:10002
-    depends_on:
-      - etcd
+
+      - MICRO_REGISTER_TTL=30      # 服务注册TTL（秒）
+      - MICRO_REGISTER_INTERVAL=15 # 续约间隔
     networks:
       - go-micro-net
+    depends_on:
+      - user
 
   # 用户服务
   user:
@@ -63,11 +72,12 @@ services:
       - HUA_USER_SERVICE_ADDRESS=user:10002
       - HUA_ETCD_ADDRESS=etcd:2379  # 可选
       - HUA_REDIS_ADDRESS=redis:6379 # 可选
-    depends_on:
-      - db
-      - etcd
-      - gateway
 
+      - ETCD_TTL=30           # 注册TTL（秒）
+      - ETCD_RETRY_INTERVAL=15 # 重试间隔
+    depends_on:
+      db:
+          condition: service_healthy
 networks:
   go-micro-net:
     driver: bridge

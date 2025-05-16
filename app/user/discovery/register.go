@@ -109,29 +109,24 @@ func (r *Register) unregister() error {
 }
 
 func (r *Register) keepAlive() {
-	ticker := time.NewTicker(time.Duration(r.srvTTL) * time.Second)
+	retryInterval := time.Duration(r.srvTTL/2) * time.Second // TTL的一半
 
 	for {
 		select {
-		// issues:https://github.com/CocaineCong/grpc-todoList/issues/19
-		// case <-r.closeCh:
-		//	if err := r.unregister(); err != nil {
-		//		r.logger.Error("unregister failed, error: ", err)
-		//	}
-		//
-		//	if _, err := r.cli.Revoke(context.Background(), r.leasesID); err != nil {
-		//		r.logger.Error("revoke failed, error: ", err)
-		//	}
 		case res := <-r.keepAliveCh:
 			if res == nil {
+				r.logger.Warn("keepalive channel closed, re-registering...")
+				time.Sleep(retryInterval) // 增加延迟防止频繁重试
 				if err := r.register(); err != nil {
-					r.logger.Error("register failed, error: ", err)
+					r.logger.Error("register failed:", err)
+					continue
 				}
 			}
-		case <-ticker.C:
+		case <-time.After(retryInterval + 2*time.Second): // 比检测间隔稍长
 			if r.keepAliveCh == nil {
+				r.logger.Warn("keepalive timeout, renewing...")
 				if err := r.register(); err != nil {
-					r.logger.Error("register failed, error: ", err)
+					r.logger.Error("register failed:", err)
 				}
 			}
 		}
