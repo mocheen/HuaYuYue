@@ -93,5 +93,5 @@ func initConf() {
 		log.Fatalf("Unable to decode config into struct: %v", err)
 	}
 
-	log.Println("User service configuration loaded successfully")
+	log.Println(Conf.Server.Domain + " service configuration loaded successfully")
 }
