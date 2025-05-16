@@ -47,6 +47,9 @@ func initClient(serviceName string, client interface{}) {
 	switch c := client.(type) {
 	case *user.UserServiceClient:
 		*c = user.NewUserServiceClient(conn)
+	case *role.RoleServiceClient:
+		*c = role.NewRoleServiceClient(conn)
+
 	default:
 		panic("unsupported client type")
 	}
