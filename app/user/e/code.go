@@ -5,7 +5,8 @@ const (
 	ERROR        = 500
 	ServiceError = 400
 
-	ErrorDatabase = 40010
+	ErrorDatabase          = 40010
+	ErrorServiceCallFailed = 40011
 
 	// 认证相关错误
 	ErrorAuthCheckTokenFail    = 10001
@@ -32,6 +33,7 @@ var msg = map[int]string{
 	ErrorUserPasswordWrong:     "密码错误",
 	ErrorUserAlreadyExist:      "用户已存在",
 	ErrorInvalidParams:         "参数错误",
+	ErrorServiceCallFailed:     "服务调用失败",
 }
 
 func GetMsg(code int) string {
