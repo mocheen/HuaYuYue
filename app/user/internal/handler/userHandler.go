@@ -73,6 +73,7 @@ func (s *UserSrv) Register(ctx context.Context, req *service.RegisterReq) (*serv
 		tx.Rollback()
 		return nil, status.Errorf(e.ErrorDatabase, "用户创建失败: %v", err)
 	}
+	// 新建用户权限
 
 	// 提交事务
 	err = tx.Commit()
