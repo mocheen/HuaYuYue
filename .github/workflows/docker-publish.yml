@@ -1,14 +1,44 @@
-name: Microservice Deploy to Aliyun ACR
+name: CI/CD Pipeline
 
 on:
   push:
     branches: [main]
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect Changed Modules
+        id: changed-modules
+        run: |
+          # 获取变动的文件路径
+          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+        
+          # 判断各模块是否有改动
+          USER_CHANGED=false
+          ROLE_CHANGED=false
+          GATEWAY_CHANGED=false
+        
+          if echo "$CHANGED_FILES" | grep -q "user/"; then
+            USER_CHANGED=true
+          fi
+          if echo "$CHANGED_FILES" | grep -q "role/"; then
+            ROLE_CHANGED=true
+          fi
+          if echo "$CHANGED_FILES" | grep -q "gateway/"; then
+            GATEWAY_CHANGED=true
+          fi
+        
+          # 输出结果供后续步骤使用
+          echo "user_changed=$USER_CHANGED" >> $GITHUB_OUTPUT
+          echo "role_changed=$ROLE_CHANGED" >> $GITHUB_OUTPUT
+          echo "gateway_changed=$GATEWAY_CHANGED" >> $GITHUB_OUTPUT
 
       # 登录阿里云容器镜像服务
       - name: Login to Aliyun ACR
@@ -20,6 +50,7 @@ jobs:
 
       # 构建并推送gateway服务
       - name: Build and push gateway
+        if: ${{ steps.changed-modules.outputs.gateway_changed == 'true' }}
         uses: docker/build-push-action@v4
         with:
           context: ./app/gateway
@@ -30,12 +61,24 @@ jobs:
 
       # 构建并推送user服务
       - name: Build and push user
+        if: ${{ steps.changed-modules.outputs.user_changed == 'true' }}
         uses: docker/build-push-action@v4
         with:
           context: ./app/user
           tags: |
             crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-user:latest
             crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-user:${{ github.sha }}
+          push: true
+
+      # 构建并推送role服务
+      - name: Build and push role
+        if: ${{ steps.changed-modules.outputs.role_changed == 'true' }}
+        uses: docker/build-push-action@v4
+        with:
+          context: ./app/role
+          tags: |
+            crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-role:latest
+            crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-role:${{ github.sha }}
           push: true
 
       # 设置SSH目录和密钥权限
@@ -46,14 +89,15 @@ jobs:
           chmod 600 ~/.ssh/jumpserver.pem
           ssh-keyscan -p 2222 jumpserver.99.suyiiyii.top >> ~/.ssh/known_hosts
           
-      # 复制 docker-compose.yml 到服务器
-      - name: Copy docker-compose.yml to Server
+      # 复制 docker-compose.yml 和 init.sql 到服务器
+      - name: Copy files to Server
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.JUMPSERVER_PRIVATE_KEY }}" > ~/.ssh/jumpserver.pem
           chmod 600 ~/.ssh/jumpserver.pem
           rsync -avz -e "ssh -p 2222 -i ~/.ssh/jumpserver.pem -o StrictHostKeyChecking=no" \
             ./docker-compose.yml \
+            ./init.sql \
             ${{ secrets.JUMPSERVER_USERNAME }}@jumpserver.99.suyiiyii.top:/opt/HuaYuYue/
 
       # 通过SSH连接JumpServer执行部署操作
@@ -76,67 +120,3 @@ jobs:
             
             # 启动容器
             docker compose -f /opt/HuaYuYue/docker-compose.yml up -d
-
-
-
-
-
-
-
-
-
-
-
-          #  执行部署命令
-#          script: |
-#            cd /opt/HuaYuYue
-#              # 1. 创建自定义网络（如果不存在）
-#              docker network inspect go-micro-net >/dev/null 2>&1 || \
-#              docker network create go-micro-net
-#
-#              # 2. 启动ETCD容器
-#              docker run -d --name etcd \
-#              --network go-micro-net \
-#              -p 2379:2379 \
-#              -e ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379 \
-#              -e ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379 \
-#              quay.io/coreos/etcd:v3.5.0
-#
-#              # 3. 启动MySQL容器（带持久化卷）
-#              docker run -d --name db \
-#              --network go-micro-net \
-#              -v db_data:/var/lib/mysql \
-#              -e MYSQL_ROOT_PASSWORD=123456 \
-#              -e MYSQL_DATABASE=user \
-#              -p 3306:3306 \
-#              --health-cmd="mysqladmin ping -uroot -p123456" \
-#              --health-interval=5s \
-#              --health-timeout=3s \
-#              --health-retries=10 \
-#              mysql:8.0
-#
-#              # 4. 启动User服务（等待MySQL健康状态）
-#              docker run -d --name user \
-#              --network go-micro-net \
-#              -p 10002:10002 \
-#              -e HUA_USER_DB_HOST=db \
-#              -e HUA_USER_DB_PORT=3306 \
-#              -e HUA_USER_DB_USERNAME=root \
-#              -e HUA_USER_DB_PASSWORD=123456 \
-#              -e HUA_USER_DB_CHARSET=utf8mb4 \
-#              -e HUA_JWT_SECRET=50b7b2b7db6dfdbf1cc7b471ce4e52ea \
-#              -e HUA_ETCD_ADDRESS=etcd:2379 \
-#              crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-user:latest
-#
-#              # 5. 启动Gateway服务（等待User服务）
-#              docker run -d --name gateway \
-#              --network go-micro-net \
-#              -p 4000:4000 \
-#              -e HUA_JWT_SECRET=50b7b2b7db6dfdbf1cc7b471ce4e52ea \
-#              -e HUA_ETCD_ADDRESS=etcd:2379 \
-#              -e HUA_GATEWAY_ADDRESS=127.0.0.1:10001 \
-#              -e HUA_USER_SERVICE_ADDRESS=user:10002 \
-#              crpi-9koetp78bl09eg2k.cn-shenzhen.personal.cr.aliyuncs.com/mocheen/huayuyue-gateway:latest
-#
-#              # 6. 清理旧镜像（保留最近2个版本）
-#              docker image prune -af --filter "until=48h"
