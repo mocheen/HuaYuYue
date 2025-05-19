@@ -23,10 +23,20 @@ func NewRouter(service ...interface{}) *gin.Engine {
 	}
 
 	// 私有路由组 - 需要JWT验证
-	private := ginRouter.Group("/api/v1")
+	private := public.Group("")
 	private.Use(middleware.JWT()) // 应用JWT中间件
 	{
-		public.GET("/role/selRole", handler.SelRole)
+		private.GET("/role/selRole", handler.SelRole)
+		private.POST("/role/newAdminAPL", handler.NewAdminAPL)
+		private.POST("/role/revAdminAPL", handler.RevAdminAPL)
+		private.GET("/role/selAdminAPL", handler.SelAdminAPL)
+	}
+
+	// 权限路由组 - 需要JWT验证和权限验证
+	rbac := private.Group("")
+	rbac.Use(middleware.RBAC())
+	{
+
 	}
 
 	return ginRouter

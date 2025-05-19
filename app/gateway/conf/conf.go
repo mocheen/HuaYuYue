@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"github.com/joho/godotenv"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -71,7 +72,7 @@ func initConf() {
 		value := viper.GetString(key)
 		if strings.HasPrefix(value, "${") && strings.HasSuffix(value, "}") {
 			envVar := strings.TrimSuffix(strings.TrimPrefix(value, "${"), "}")
-			viper.Set(key, viper.GetString(envVar))
+			viper.Set(key, os.Getenv(envVar))
 		}
 	}
 

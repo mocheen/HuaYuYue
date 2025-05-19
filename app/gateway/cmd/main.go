@@ -35,6 +35,7 @@ func main() {
 
 	// 创建 Client 实例
 	userServiceClient := user.NewUserServiceClient(userServiceConn)
+
 	roleServiceClient := role.NewRoleServiceClient(roleServiceConn)
 
 	// 传递客户端实例而非连接对象

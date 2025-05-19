@@ -7,6 +7,7 @@ import (
 	"gateway/pkg/jwt"
 	"gateway/pkg/res"
 	"github.com/gin-gonic/gin"
+	"strings"
 	"time"
 )
 
@@ -16,11 +17,12 @@ func JWT() gin.HandlerFunc {
 		var code int
 		code = 200
 		token := c.GetHeader("Authorization")
-		if token == "" {
+		if token == "" || !strings.HasPrefix(token, "Bearer ") {
 			res.ErrorWithHTTPStatus(c, 401, e.ErrorAuthTokenInvalid,
 				errors.New("authorization header is missing or invalid"))
 			return
 		}
+		token = token[7:]
 		claims, err := jwt.ParseToken(token)
 		if err != nil {
 			code = e.ErrorAuthCheckTokenFail

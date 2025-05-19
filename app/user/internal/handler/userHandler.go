@@ -7,14 +7,18 @@ import (
 	"user/e"
 	"user/internal/repository"
 	"user/internal/repository/query"
+	"user/internal/service/role"
 	"user/jwt"
 	"user/util"
 
 	service "user/internal/service/pb"
 )
 
-var UserSrvIns *UserSrv
-var UserSrvOnce sync.Once
+var (
+	RoleServiceClient role.RoleServiceClient
+	UserSrvIns        *UserSrv
+	UserSrvOnce       sync.Once
+)
 
 type UserSrv struct {
 	service.UnimplementedUserServiceServer
@@ -73,7 +77,14 @@ func (s *UserSrv) Register(ctx context.Context, req *service.RegisterReq) (*serv
 		tx.Rollback()
 		return nil, status.Errorf(e.ErrorDatabase, "用户创建失败: %v", err)
 	}
+	// 新建用户权限
+	_, err = RoleClient.AddRole(ctx, &role.AddRoleReq{
+		UserId: int32(user.ID),
+	})
 
+	if err != nil {
+		return nil, status.Errorf(e.ErrorServiceCallFailed, "权限分配失败: %v", err)
+	}
 	// 提交事务
 	err = tx.Commit()
 	if err != nil {

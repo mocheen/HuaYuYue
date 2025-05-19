@@ -1,13 +1,11 @@
 package jwt
 
 import (
+	"gateway/conf"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/spf13/viper"
 )
-
-var jwtSecret = []byte(viper.GetString("server.jwtSecret"))
 
 type Claims struct {
 	UserID int64 `json:"user_id"`
@@ -26,12 +24,14 @@ func GenerateToken(userID int64) (string, error) {
 		},
 	}
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	var jwtSecret = []byte(conf.Conf.Server.JwtSecret)
 	token, err := tokenClaims.SignedString(jwtSecret)
 	return token, err
 }
 
 // ParseToken 验证用户token
 func ParseToken(token string) (*Claims, error) {
+	var jwtSecret = []byte(conf.Conf.Server.JwtSecret)
 	tokenClaims, err := jwt.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
