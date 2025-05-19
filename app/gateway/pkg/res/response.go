@@ -1,8 +1,11 @@
 package res
 
 import (
+	"fmt"
 	"gateway/pkg/e"
 	"github.com/gin-gonic/gin"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"net/http"
 )
 
@@ -16,6 +19,32 @@ type Response struct {
 
 // 成功响应
 func Success(c *gin.Context, data interface{}) {
+	var jsonData []byte
+	var err error
+
+	// 检查是否是 protobuf 消息
+	if msg, ok := data.(proto.Message); ok {
+		// 使用 protobuf 的 JSON 序列化器
+		marshaler := protojson.MarshalOptions{
+			EmitUnpopulated: true, // 确保零值字段也被序列化
+		}
+		jsonData, err = marshaler.Marshal(msg)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		// 手动构建响应
+		c.Data(http.StatusOK, "application/json", []byte(fmt.Sprintf(
+			`{"status":%d,"message":"%s","data":%s}`,
+			e.SUCCESS,
+			e.GetMsg(e.SUCCESS),
+			jsonData,
+		)))
+		return
+	}
+
+	// 非 protobuf 消息走原来的逻辑
 	c.JSON(http.StatusOK, Response{
 		Status:  e.SUCCESS,
 		Message: e.GetMsg(e.SUCCESS),
