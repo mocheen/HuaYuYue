@@ -125,6 +125,9 @@ func (s *RoleSrv) SelAdminAPL(ctx context.Context, _ *emptypb.Empty) (*service.S
 	if err != nil {
 		return nil, err
 	}
+	if role.RoleId != e.SUPERADMIN {
+		return nil, status.Errorf(e.ErrorRole, "用户不是超级管理员: %v", err)
+	}
 
 	var aplList []*service.AdminApl
 	var adminAPL []*repository.AdminAPL
