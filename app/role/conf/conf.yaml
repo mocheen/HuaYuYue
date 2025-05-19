@@ -1,0 +1,21 @@
+server:
+  domain: role
+  version: 1.0
+  grpcAddress: ${HUA_ROLE_SERVICE_ADDRESS}
+
+mysql:
+  driverName: mysql
+  host: ${HUA_ROLE_DB_HOST}
+  port: ${HUA_ROLE_DB_PORT}
+  database: role
+  username: ${HUA_ROLE_DB_USERNAME}
+  password: ${HUA_ROLE_DB_PASSWORD}
+  charset: utf8mb4
+
+etcd:
+  address: ${HUA_ETCD_ADDRESS}
+
+redis:
+  address: ${HUA_REDIS_ADDRESS}
+  username: ${HUA_REDIS_USERNAME}
+  db: 0
