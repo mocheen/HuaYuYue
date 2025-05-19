@@ -116,7 +116,10 @@ jobs:
             ls -la /opt/HuaYuYue/docker-compose.yml
             
             # 拉取最新镜像
-            docker compose -f /opt/HuaYuYue/docker-compose.yml pull user gateway
+            docker compose -f /opt/HuaYuYue/docker-compose.yml pull user gateway role
             
             # 启动容器
             docker compose -f /opt/HuaYuYue/docker-compose.yml up -d
+            
+            # 清除旧镜像
+            docker image prune -af
