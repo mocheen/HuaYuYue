@@ -15,7 +15,6 @@ import (
 	"user/internal/repository"
 	"user/internal/repository/query"
 	service "user/internal/service/pb"
-	"user/internal/service/role"
 )
 
 func main() {
@@ -45,12 +44,6 @@ func main() {
 	logger := logrus.New()
 	logger.SetFormatter(&logrus.JSONFormatter{})
 	resolver.Register(discovery.NewResolver(etcdAddress, logger))
-
-	// 创建 gRPC 连接并生成客户端实例
-	roleServiceConn := getConn("role", etcdAddress, logger)
-	handler.RoleServiceClient = role.NewRoleServiceClient(roleServiceConn)
-
-	defer roleServiceConn.Close()
 
 	// 监听
 	lis, err := net.Listen("tcp", grpcAddress)
