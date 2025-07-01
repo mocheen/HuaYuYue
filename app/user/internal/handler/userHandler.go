@@ -15,9 +15,8 @@ import (
 )
 
 var (
-	RoleServiceClient role.RoleServiceClient
-	UserSrvIns        *UserSrv
-	UserSrvOnce       sync.Once
+	UserSrvIns  *UserSrv
+	UserSrvOnce sync.Once
 )
 
 type UserSrv struct {
